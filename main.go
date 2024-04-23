@@ -9,24 +9,27 @@ import (
 	"time"
 )
 
-// LoC in directory
-func lookUpDir(d string) (int, error) {
+// Look for LoC in directory recursive
+func lookUpDir(d string) (int, int, error) {
 
 	loc := 0
+	count := 0
 	dir, err := os.ReadDir(d)
 	if err != nil {
 		log.Printf("Error while reading dir: %e", err)
-		return 0, err
+		return 0, 0, err
 	}
 
 	for _, file := range dir {
 
 		tempLoC := 0
-		fmt.Println(d + file.Name())
 
+		// Если директория - вызываем функцию рекурсивно
 		if file.IsDir() {
 
-			tempLoC, err = lookUpDir(d + file.Name() + "/")
+			tempCount := 0
+			tempLoC, tempCount, err = lookUpDir(d + file.Name() + "/")
+			count += tempCount
 
 			if err != nil {
 				continue
@@ -35,13 +38,15 @@ func lookUpDir(d string) (int, error) {
 		} else {
 
 			tempLoC = countLoC(d + file.Name())
+			count += 1
 		}
 		loc += tempLoC
 	}
 
-	return loc, nil
+	return loc, count, nil
 }
 
+// Count loc in single file
 func countLoC(f string) int {
 
 	loc := 0
@@ -61,12 +66,14 @@ func countLoC(f string) int {
 	if err := scanner.Err(); err != nil {
 		log.Printf("Error while scanning file %s: %e", f, err)
 	}
-
+	log.Printf("Scanned: %s (%d LoC)", f, loc)
 	return loc
 }
 
 func main() {
+
 	startTime := time.Now()
+
 	// Парсим флаг пути
 	var path string
 	flag.StringVar(&path, "path", "./", "Path to inspected directory. Current directory for default")
@@ -77,11 +84,11 @@ func main() {
 		path += "/"
 	}
 
-	result, err := lookUpDir(path)
+	result, count, err := lookUpDir(path)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Count of lines in %s: %d \n", path, result)
+	fmt.Printf("Count of lines: %d, total files scanned: %d \n", result, count)
 	fmt.Printf("Completed in  %f seconds", time.Since(startTime).Seconds())
 }
