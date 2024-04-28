@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -36,9 +37,15 @@ func lookUpDir(d string) (int, int, error) {
 			}
 
 		} else {
+			// Если файл, фильтруем и считаем LoC
+			// ext := filepath.Ext(file.Name())
 
-			tempLoC = countLoC(d + file.Name())
-			count += 1
+			//  Через slices.Contains в го 1.21
+			if true {
+				tempLoC = countLoC(d + file.Name())
+				count += 1
+			}
+
 		}
 		loc += tempLoC
 	}
@@ -81,7 +88,7 @@ func main() {
 
 	// Добавляем слеш в конец пути
 	if path[len(path)-1] != '/' {
-		path += "/"
+		path += string(filepath.Separator)
 	}
 
 	result, count, err := lookUpDir(path)
